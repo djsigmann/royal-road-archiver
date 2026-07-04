@@ -336,7 +336,18 @@ def _parse_chapter_html(html_content: str, current_page_url: str) -> dict:
     content_div = soup.find('div', class_='chapter-content')
     if not content_div: # Fallback for some different structures
         content_div = soup.find('div', class_='prose') # Example of another content class
-    content_html = str(content_div) if content_div else "<p>Content not found.</p>"
+    if content_div:
+        content_html = str(content_div)
+        if author_note_divs := soup.find_all('div', class_='author-note-portlet'):
+            match len(author_note_divs):
+                case 1:
+                    content_html = str(author_note_divs[0]) + content_html
+                case 2:
+                    content_html = str(author_note_divs[0]) + content_html + str(author_note_divs[1])
+                case _:
+                    raise Exception(f'Too many author note divs: {len(author_note_divs)}')
+    else:
+        content_html =  "<p>Content not found.</p>"
 
     # Link do Próximo Capítulo
     next_chapter_url = None
